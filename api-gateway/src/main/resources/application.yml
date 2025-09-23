@@ -2,8 +2,6 @@ server:
   port: 8080
 
 spring:
-  application:
-    name: api-gateway
   cloud:
     gateway:
       server:
@@ -13,10 +11,15 @@ spring:
               uri: lb://ORDER-SERVICE
               predicates:
                 - Path=/api/v1/order/**
+              filters:
+                - name: Authentication
+                  args:
+                    enabled: true   # <-- match the field name
             - id: inventory-service
               uri: lb://INVENTORY-SERVICE
               predicates:
                 - Path=/api/v1/product/**
+
 
 eureka:
   client:
@@ -31,3 +34,4 @@ management:
   endpoint:
     gateway:
       enabled: true
+
