@@ -29,7 +29,7 @@ public class OrderService {
 
     private final InventoryClient inventoryClient;
     
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
     
     public List<OrderRequestDto> getAllOrders()
     {
@@ -49,9 +49,9 @@ public class OrderService {
 
 
     @CircuitBreaker(name = "inventory", fallbackMethod = "fallback")
-    @Retry(name = "inventory")
+/*    @Retry(name = "inventory")
     @RateLimiter(name = "inventory")
-    @Bulkhead(name = "inventory", type = Bulkhead.Type.SEMAPHORE)
+    @Bulkhead(name = "inventory", type = Bulkhead.Type.SEMAPHORE)*/
     public OrderRequestDto createOrder(OrderRequestDto orderRequestDto) {
 
         Double price = inventoryClient.reduceStock(orderRequestDto);
