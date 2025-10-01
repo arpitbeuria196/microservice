@@ -66,6 +66,17 @@ public class ProductController {
 
     }
 
+    @PostMapping(
+            path = "/create-order-kafka",
+            consumes = "application/json",
+            produces = "application/json"
+    )
+    public ResponseEntity<String> createOrderUsingKafka(@RequestBody OrderRequestDto orderRequestDto)
+    {
+        String orderRequestDto1 = productService.reduceStockUsingKafka(orderRequestDto);
+        return new ResponseEntity<>(orderRequestDto1,HttpStatus.CREATED);
+    }
+
 
 
 }

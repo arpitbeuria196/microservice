@@ -3,6 +3,7 @@ package com.example.order_service.service;
 
 import com.example.order_service.clients.InventoryClient;
 import com.example.order_service.dto.OrderRequestDto;
+import com.example.order_service.dto.OrderRequestItemDto;
 import com.example.order_service.entity.Order;
 import com.example.order_service.entity.OrderItem;
 import com.example.order_service.entity.OrderStatus;
@@ -14,10 +15,14 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -30,6 +35,9 @@ public class OrderService {
     private final InventoryClient inventoryClient;
     
     private final ModelMapper modelMapper;
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
     
     public List<OrderRequestDto> getAllOrders()
     {
@@ -70,6 +78,23 @@ public class OrderService {
         Order savedOrder = orderRepository.save(orders);
 
         return modelMapper.map(savedOrder, OrderRequestDto.class);
+    }
+
+    @KafkaListener(topics = "${app.kafka.topic}", groupId = "order-service")
+    public String createOrderUsingKafka(OrderRequestDto orderRequestDto)
+    {
+        Order  orders = modelMapper.map(orderRequestDto,Order.class);
+
+        for (OrderItem orderItem : orders.getItems())
+        {
+            orderItem.setOrder(orders);
+        }
+
+        orders.setOrderStatus(OrderStatus.DELIVERED);
+
+        Order saveOrder = orderRepository.save(orders);
+
+        return "Message Reached to Order Service";
     }
 
     private OrderRequestDto fallbackMethod(OrderRequestDto orderRequestDto,Throwable t)
